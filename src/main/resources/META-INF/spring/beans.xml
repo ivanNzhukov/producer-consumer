@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans 
+       http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+    <bean name="reader" class="xml.impl.ReaderImpl"/>
+    <bean name="creator" class="xml.impl.CreatorImpl">
+        <property name="reader" ref="reader"/>
+    </bean>
+
+    <bean id="dispatchId" class="java.util.concurrent.atomic.AtomicInteger">
+        <constructor-arg index="0" type="int" value="0"/>
+    </bean>
+    <bean id="blockingQueue" class="java.util.concurrent.ArrayBlockingQueue">
+        <constructor-arg index="0" type="int" value="500"/>
+    </bean>
+    <bean id="emergencyQueue" class="java.util.concurrent.ConcurrentLinkedQueue"/>
+
+    <bean name="client" class="dom.workers.impl.client.ClientImpl">
+        <property name="creator" ref="creator"/>
+        <property name="dispatcher" ref="dispatcher"/>
+    </bean>
+
+    <bean name="taxi" class="dom.workers.impl.taxi.TaxiImpl">
+        <property name="reader" ref="reader"/>
+        <property name="creator" ref="creator"/>
+        <property name="dispatcher" ref="dispatcher"/>
+    </bean>
+
+    <bean name="dispatcher" class="dom.workers.impl.dispatcher.DispatcherImpl">
+        <property name="reader" ref="reader"/>
+        <property name="creator" ref="creator"/>
+        <property name="dispatchId" ref="dispatchId"/>
+        <property name="blockingQueue" ref="blockingQueue"/>
+        <property name="emergencyQueue" ref="emergencyQueue"/>
+    </bean>
+
+    <bean name="starter" class="dom.start.Starter">
+        <property name="taxi" ref="taxi"/>
+        <property name="client" ref="client"/>
+        <property name="dispatcher" ref="dispatcher"/>
+    </bean>
+</beans>
